@@ -1,56 +1,88 @@
 # EcoScore 🌱
 
-EcoScore is a responsive sustainability web app that turns everyday habits into a score from **20 to 100 points**.
+EcoScore is a sustainability web application built with **Python + Flask**.
 
-## Live Demo
+The user answers 20 questions across four areas — Mobility, Energy, Food and Consumption — and the browser sends only the selected answer indexes to the Flask backend. Python validates the 20 answers, calculates the final score out of 100, computes category results, and returns personalized tips and a 7-day challenge.
 
-👉 **https://ecoscore-71mu7k.v2.appdeploy.ai/**
+## Tech stack
 
-## Features
+- **Python 3** — core application logic
+- **Flask** — web server and API endpoints
+- **HTML5** — interface structure
+- **CSS3** — responsive visual design
+- **JavaScript** — dynamic quiz UI and Leaf Runner mini-game
+- **Canvas API + requestAnimationFrame** — 2D pixel game rendering and loop
 
-- 20 sustainability questions
+## Where Python is used
+
+### `app.py`
+Runs the Flask web server and exposes:
+
+- `GET /` — serves the EcoScore interface
+- `GET /api/questions` — returns the 20 quiz questions
+- `POST /api/score` — receives the answers and returns the calculated result
+
+### `ecoscore.py`
+Contains:
+
+- all 20 questions
 - 5 answers per question
-- 4 categories: Mobility, Energy, Food and Consumption
-- total score out of 100
-- category breakdowns
-- personalized suggestions based on the user's answers
-- 7-day challenge
-- Green Wins section
-- custom 2D pixel mini-game: **Leaf Runner**
-- keyboard and mobile/touch controls
-- responsive desktop/mobile interface
-- AstraIndustries Discord link
+- score values from 1 to 5
+- validation logic
+- total EcoScore calculation
+- category totals
+- personalized recommendations
+- Green Wins
+- 7-day challenge selection
 
-## Technologies
+With 20 questions × maximum 5 points, the maximum score is exactly **100**.
 
-- HTML5
-- CSS3
-- JavaScript
-- Canvas API
-- requestAnimationFrame
-- AppDeploy for the public deployment
+## Run locally
 
-## Scoring logic
+### Windows
 
-Each question has five possible answers worth **1 to 5 points**. With 20 questions, the maximum EcoScore is exactly **100 points**.
+1. Run `install.bat` once.
+2. Run `start.bat`.
+3. The browser opens at `http://127.0.0.1:5000`.
 
-The app also calculates category percentages, identifies the areas with the most room for improvement, and generates targeted suggestions from the answers selected by the user.
+### Terminal
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5000
+```
+
+## Project structure
+
+```text
+EcoScore/
+├── app.py
+├── ecoscore.py
+├── requirements.txt
+├── install.bat
+├── start.bat
+├── templates/
+│   └── index.html
+└── static/
+    ├── style.css
+    └── app.js
+```
 
 ## Leaf Runner
 
-Leaf Runner is a lightweight 2D pixel runner built directly into the website.
+Leaf Runner is a custom 2D pixel mini-game included in the web interface.
 
 Controls:
 
 - `SPACE` — jump
 - `↑` — jump
 - tap/click — mobile control
-
-## Run locally
-
-No installation is required for this version.
-
-Download the repository and open `index.html` in a browser, or serve the folder with any simple static web server.
 
 ## Community
 
