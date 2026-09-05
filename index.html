@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101a16" />
+  <meta name="description" content="EcoScore trasforma le abitudini quotidiane in un punteggio da 0 a 100 e suggerisce azioni concrete per migliorare." />
+  <title>EcoScore — Small habits. Real impact.</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav-wrap">
+    <nav class="nav container" aria-label="Navigazione principale">
+      <a class="logo" href="#home" aria-label="EcoScore home">
+        <span class="logo-mark" aria-hidden="true">E</span>
+        <span><b>EcoScore</b><small>small habits · real impact</small></span>
+      </a>
+      <div class="nav-links">
+        <a href="#how">Come funziona</a>
+        <a href="#quiz">Quiz</a>
+        <a href="#game">Pixel Game</a>
+        <a class="discord-link" href="https://discord.gg/yv6ZYd7eTw" target="_blank" rel="noopener">AstraIndustries ↗</a>
+      </div>
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#how">Come funziona</a>
+      <a href="#quiz">Quiz</a>
+      <a href="#game">Pixel Game</a>
+      <a href="https://discord.gg/yv6ZYd7eTw" target="_blank" rel="noopener">AstraIndustries Discord ↗</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container" id="home">
+      <div class="hero-copy">
+        <div class="pill"><span class="pulse"></span> 20 domande · 100 punti · zero prediche</div>
+        <h1>Quanto sono <em>green</em><br/>le tue abitudini?</h1>
+        <p>Scoprilo in pochi minuti. EcoScore misura 4 aree della vita quotidiana, ti dà un punteggio chiaro e trasforma le risposte in consigli realmente utili.</p>
+        <div class="hero-actions">
+          <button class="btn primary" id="heroQuizBtn" type="button">Calcola il mio EcoScore <span>→</span></button>
+          <button class="btn secondary" id="heroGameBtn" type="button">Gioca a Leaf Runner <span>▸</span></button>
+        </div>
+        <div class="trust"><span>✓ Nessun account</span><span>✓ Nessun dato sensibile</span><span>✓ Risultato immediato</span></div>
+      </div>
+
+      <div class="hero-visual" aria-label="Anteprima dashboard EcoScore">
+        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+        <div class="floating-chip chip-a">♻ +5</div>
+        <div class="floating-chip chip-b">⚡ +4</div>
+        <div class="score-preview">
+          <div class="preview-top"><span>YOUR ECOSCORE</span><span class="live-dot">LIVE</span></div>
+          <div class="big-score"><strong>78</strong><span>/100</span></div>
+          <div class="grade">Nice work. Il pianeta non si lamenta.</div>
+          <div class="bars">
+            <div><span>Mobilità</span><b><i style="width:84%"></i></b><em>84%</em></div>
+            <div><span>Energia</span><b><i style="width:72%"></i></b><em>72%</em></div>
+            <div><span>Cibo</span><b><i style="width:80%"></i></b><em>80%</em></div>
+            <div><span>Consumi</span><b><i style="width:76%"></i></b><em>76%</em></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="how section container" id="how">
+      <div class="section-head split-head">
+        <div><span class="kicker">COME FUNZIONA</span><h2>Un numero semplice.<br/>Dietro, 20 scelte reali.</h2></div>
+        <p>Ogni risposta vale da 1 a 5 punti. Con 20 domande il massimo è esattamente 100: niente formule misteriose, niente “algoritmo magico”.</p>
+      </div>
+      <div class="steps-grid">
+        <article><span>01</span><div class="step-icon">◉</div><h3>Rispondi</h3><p>5 domande per ciascuna delle 4 aree.</p></article>
+        <article><span>02</span><div class="step-icon">∑</div><h3>Sommiamo</h3><p>Ogni risposta assegna da 1 a 5 punti.</p></article>
+        <article><span>03</span><div class="step-icon">▥</div><h3>Capisci</h3><p>Score totale e percentuali per categoria.</p></article>
+        <article><span>04</span><div class="step-icon">↗</div><h3>Migliori</h3><p>Consigli scelti proprio dalle tue risposte.</p></article>
+      </div>
+    </section>
+
+    <section class="quiz-section section" id="quiz">
+      <div class="container quiz-container">
+        <div class="quiz-intro" id="quizIntro">
+          <div class="quiz-intro-copy">
+            <span class="kicker light">ECOSCORE CHECK-UP</span>
+            <h2>20 domande.<br/>Promettiamo: niente interrogazione.</h2>
+            <p>Scegli ciò che descrive meglio quello che fai davvero. La risposta “perfetta” serve meno di quella sincera.</p>
+            <div class="category-chips"><span>🚲 Mobilità</span><span>⚡ Energia</span><span>🥗 Cibo</span><span>♻️ Consumi</span></div>
+            <button class="btn light-btn" id="startQuizBtn" type="button">Inizia il quiz →</button>
+          </div>
+          <div class="quiz-intro-art" aria-hidden="true"><div class="q-card q1">Q<span>05</span></div><div class="q-card q2">Q<span>12</span></div><div class="q-card q3">Q<span>20</span></div></div>
+        </div>
+
+        <div class="quiz-panel hidden" id="quizPanel">
+          <div class="quiz-meta"><div><span class="category-badge" id="categoryBadge"></span><span class="counter" id="counter"></span></div><button class="text-btn" id="restartTiny" type="button">Ricomincia</button></div>
+          <div class="progress"><div id="progressFill"></div></div>
+          <div class="question-wrap"><span class="question-number" id="questionNumber"></span><h2 id="questionText"></h2><p class="micro-reaction" id="microReaction" aria-live="polite"></p><div class="answer-list" id="answerList"></div></div>
+          <div class="quiz-nav"><button class="btn ghost-on-dark" id="prevBtn" type="button">← Indietro</button><button class="btn light-btn" id="nextBtn" type="button" disabled>Avanti →</button></div>
+        </div>
+
+        <div class="results hidden" id="resultsPanel">
+          <div class="result-hero"><div class="score-gauge" id="scoreGauge" style="--score:0"><div><strong id="totalScore">0</strong><span>/100</span></div></div><div class="result-copy"><span class="kicker light">IL TUO RISULTATO</span><h2 id="scoreTitle"></h2><p id="scoreText"></p><div class="result-badges" id="resultBadges"></div></div></div>
+          <div class="results-grid"><article class="result-card"><div class="card-label">AREE</div><h3>Il tuo profilo</h3><div class="category-results" id="categoryResults"></div></article><article class="result-card accent-card"><div class="card-label">7-DAY QUEST</div><h3 id="challengeTitle"></h3><p id="challengeText"></p><span class="challenge-tag">+ una settimana, non una vita</span></article></div>
+          <article class="result-card tips-card"><div class="tips-head"><div><div class="card-label">PERSONALIZZATO</div><h3>Le mosse più utili per te</h3></div><span>Scelte dalle risposte con più margine</span></div><div class="tips-grid" id="tipsGrid"></div></article>
+          <article class="wins-card"><div><div class="card-label">GREEN WINS</div><h3>Quello che stai già facendo bene</h3></div><div id="winsList" class="wins-list"></div></article>
+          <div class="result-actions"><button class="btn light-btn" id="redoBtn" type="button">Rifai il quiz</button><button class="btn ghost-on-dark" id="playFromResults" type="button">Ora fammi giocare →</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-section section container" id="game">
+      <div class="game-copy"><span class="kicker">MINI GAME · PIXEL EDITION</span><h2>Leaf Runner</h2><p>Corri, salta gli ostacoli e raccogli foglie. È scientificamente provato che non salverà il pianeta da solo. Ma almeno è più divertente di leggere un PDF.</p><div class="game-how"><span><kbd>SPACE</kbd> salta</span><span><kbd>↑</kbd> salta</span><span><kbd>TAP</kbd> mobile</span></div><div class="game-actions"><button class="btn primary" id="startGameBtn" type="button">Avvia partita</button><button class="btn secondary" id="resetBestBtn" type="button">Reset record</button></div></div>
+      <div class="arcade-shell"><div class="arcade-top"><div><span class="pixel-dot"></span> LEAF RUNNER</div><div>SCORE <strong id="gameScore">0000</strong> · BEST <strong id="gameBest">0000</strong></div></div><div class="canvas-wrap"><canvas id="gameCanvas" width="960" height="420" aria-label="Leaf Runner, gioco pixel 2D"></canvas><button class="canvas-overlay" id="canvasOverlay" type="button"><span class="pixel-logo">🌱</span><b id="overlayTitle">READY?</b><small id="overlaySub">Premi per iniziare</small></button></div><div class="arcade-bottom"><span>🌿 +10</span><span>Evita 🗑️ ☁️</span><span id="gameStatus">STATUS: IDLE</span></div></div>
+    </section>
+
+    <section class="cta section container"><div class="cta-card"><div><span class="kicker light">ASTRAINDUSTRIES</span><h2>Dietro EcoScore c’è un team che costruisce cose.</h2><p>Progetti, prototipi, game development e parecchie idee in lavorazione.</p></div><a class="btn discord-btn" href="https://discord.gg/yv6ZYd7eTw" target="_blank" rel="noopener"><span class="discord-icon">◖◗</span> Apri AstraIndustries Discord ↗</a></div></section>
+  </main>
+
+  <footer class="footer container"><div class="logo mini"><span class="logo-mark">E</span><span><b>EcoScore</b><small>by AstraIndustries</small></span></div><p>EcoScore è uno strumento educativo e non una certificazione ambientale. Il punteggio rappresenta le risposte fornite, non una misura scientifica completa delle emissioni personali.</p><a href="#home">Torna su ↑</a></footer>
+  <script src="app.js"></script>
+</body>
+</html>
