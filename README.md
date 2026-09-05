@@ -1,6 +1,10 @@
 # EcoScore 🌱
 
-## Apri il progetto
+## AstraIndustries Server
+
+👉 [**Entra nel server Discord AstraIndustries**](https://discord.gg/yv6ZYd7eTw)
+
+## Apri EcoScore
 
 👉 [**Apri EcoScore nel browser**](https://ecoscore-71mu7k.v2.appdeploy.ai/)
 
@@ -87,10 +91,6 @@ Controls:
 - `SPACE` — jump
 - `↑` — jump
 - tap/click — mobile control
-
-## Community
-
-AstraIndustries Discord: https://discord.gg/yv6ZYd7eTw
 
 ---
 
