@@ -1,5 +1,9 @@
 # EcoScore 🌱
 
+## Apri il progetto
+
+👉 [**Apri EcoScore nel browser**](https://ecoscore-71mu7k.v2.appdeploy.ai/)
+
 EcoScore is a sustainability web application built with **Python + Flask**.
 
 The user answers 20 questions across four areas — Mobility, Energy, Food and Consumption — and the browser sends only the selected answer indexes to the Flask backend. Python validates the 20 answers, calculates the final score out of 100, computes category results, and returns personalized tips and a 7-day challenge.
