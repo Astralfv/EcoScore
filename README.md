@@ -28,7 +28,6 @@ EcoScore is a responsive sustainability web app that turns everyday habits into 
 - JavaScript
 - Canvas API
 - requestAnimationFrame
-- Vite for local development
 - AppDeploy for the public deployment
 
 ## Scoring logic
@@ -49,12 +48,9 @@ Controls:
 
 ## Run locally
 
-```bash
-npm install
-npm run dev
-```
+No installation is required for this version.
 
-Then open the local address printed by Vite.
+Download the repository and open `index.html` in a browser, or serve the folder with any simple static web server.
 
 ## Community
 
