@@ -7,7 +7,7 @@
 
 EcoScore is a small sustainability project by **AstraIndustries**. It compares 20 everyday habits across four areas, returns a score from 0 to 100 and highlights realistic places to improve.
 
-The public site is now a **single switchable interface** with **Italian, English and Russian** available directly in the header. Language preference is remembered locally.
+The public site is a **single switchable interface** with **Italian, English and Russian** available directly in the header. Language preference is remembered locally.
 
 ## What it includes
 
@@ -18,38 +18,38 @@ The public site is now a **single switchable interface** with **Italian, English
 - improvement priorities
 - positive habits already in place
 - a practical 7-day challenge
-- **Eco Flux**, an original competitive 2D pixel-art score-attack game
+- **Eco Rally**, an original competitive 2D pixel-art racing time trial
 - responsive desktop and mobile layouts
 - live IT / EN / RU language switching
 - motion and micro-interactions with reduced-motion support
 - a dedicated AstraIndustries Discord community section
 
-## Eco Flux
+## Eco Rally
 
-Eco Flux replaces the previous maze mini-game with a faster, more competitive score-attack loop built around short repeatable runs.
+Eco Rally replaces the previous score-arena game with a more concrete and skill-based racing challenge.
 
-Each run lasts **60 seconds**. The goal is to push a personal best through precise movement, risk management and combo preservation.
+The game is a **three-lap top-down pixel-art time trial**. The goal is to learn the circuit, improve braking points and corner exits, and beat your own best lap.
 
 ### Core mechanics
 
-- continuous movement with Arrow keys or WASD
-- 60-second runs designed for immediate retries
-- collectible energy cores
-- combo-based multiplier up to x8
-- Flow meter used as a gameplay resource
-- Space-bar dash that consumes Flow
-- hostile smog drones with escalating pressure
-- near-miss bonuses for passing dangerously close to drones
-- dash-through drone breaks for extra score
-- collisions remove time, Flow and combo rather than ending the run immediately
-- increasing drone count and speed during the run
-- personal-best score stored in `localStorage`
-- final performance rank and run statistics
-- pixel particles, screen shake, score popups and animated trail
-- procedural 8-bit-style music and sound effects with the Web Audio API
-- pause, mute, restart, fullscreen and mobile touch controls
+- Arrow keys or WASD for throttle, braking and steering
+- Space to drift
+- Shift to use boost
+- three-lap sessions
+- mandatory checkpoints
+- road grip versus slower grass/off-road handling
+- boost pads placed around the circuit
+- boost gained through controlled drifting
+- lap timer, best lap and delta display
+- personal best saved in `localStorage`
+- best-lap racing line saved as a transparent ghost replay
+- ghost opponent visible during later attempts
+- pixel skid marks, particles and environmental details
+- procedural engine and feedback sounds through the Web Audio API
+- pause, mute, restart and fullscreen controls
+- dedicated touch controls for mobile
 
-The design goal is a low-friction competitive loop: **run → score → restart → improve the PB**.
+The competitive loop is intentionally simple: **learn the track → set a clean lap → race your ghost → improve by tenths**.
 
 ## Languages
 
@@ -61,13 +61,13 @@ Available languages:
 - 🇬🇧 English
 - 🇷🇺 Russian
 
-The switch happens inside the current page, including the quiz, results, game description and Discord/community copy.
+The switch happens inside the current page, including the quiz, results, game and Discord/community copy.
 
 ## Discord community
 
 Discord is a primary part of the project rather than a small footer link. The site includes a dedicated community section for:
 
-- sharing Eco Flux personal-best scores
+- sharing Eco Rally best-lap times
 - feedback and bug reports
 - EcoScore and AstraIndustries project updates
 
@@ -146,7 +146,7 @@ The project currently uses a mix of:
 - Canvas API + `requestAnimationFrame`
 - Web Audio API
 - Fullscreen API
-- `localStorage` for language preference and Eco Flux personal best
+- `localStorage` for language preference, best lap and ghost replay
 
 ## Note
 
