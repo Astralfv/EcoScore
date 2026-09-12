@@ -17,7 +17,7 @@ EcoScore is a small sustainability web application by **AstraIndustries**. It tu
 - personalised improvement priorities
 - positive habits already in place
 - a 7-day challenge based on the weakest category
-- **River Cleanup**, an animated 2D canvas mini-game
+- **Eco Maze**, an animated nature-themed 2D maze game
 
 ## Tech stack
 
@@ -27,6 +27,8 @@ EcoScore is a small sustainability web application by **AstraIndustries**. It tu
 - CSS3
 - Vanilla JavaScript
 - Canvas API + `requestAnimationFrame`
+- Web Audio API for procedural music and sound effects
+- Fullscreen API for optional full-screen gameplay
 
 The quiz score is calculated on the Flask backend. The browser sends only the selected answer indexes; the server validates them against `questions.json` before returning the result.
 
@@ -79,18 +81,26 @@ Each question has five possible answers worth 1 to 5 points. There are five ques
 - green wins
 - the selected 7-day challenge
 
-## River Cleanup
+## Eco Maze
 
-River Cleanup replaces the previous endless runner. It is a top-down canvas mini-game with:
+Eco Maze is an original nature-themed maze game inspired by classic maze-chase games without reusing their characters, map or artwork.
 
-- keyboard and pointer/touch controls
-- animated water and boat movement
-- collectible waste
-- rocks and logs as obstacles
-- combo multiplier
-- particles and floating score feedback
-- progressive speed increase
-- local high-score persistence
+Gameplay features:
+
+- collect seeds to clear the maze
+- collect special flowers to temporarily weaken the smog enemies
+- three different enemy behaviours
+- lives, score, levels and persistent local high score
+- animated player, enemies, collectibles and particle effects
+- increasing difficulty on later levels
+- keyboard controls with Arrow keys or WASD
+- touch directional controls on mobile devices
+- pause and restart controls
+- mute/unmute control
+- procedural sound effects and looping background music generated with the Web Audio API
+- optional full-screen mode using the browser Fullscreen API
+
+No external audio files are required: music and sound effects are generated directly in the browser.
 
 ## Design direction
 
