@@ -1,5 +1,11 @@
 # EcoScore
 
+## Live links
+
+- 🇮🇹 [**EcoScore — Italiano**](https://ecoscore-71mu7k.v2.appdeploy.ai/)
+- 🇬🇧 [**EcoScore — English**](https://ecoscore-71mu7k.v2.appdeploy.ai/?lang=en)
+- 💬 [**AstraIndustries Discord**](https://discord.gg/yv6ZYd7eTw)
+
 EcoScore is a small sustainability web application by **AstraIndustries**. It turns 20 everyday-habit questions into a score from 0 to 100 and highlights the areas where a few realistic changes can have the most value.
 
 ## What it includes
