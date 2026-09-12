@@ -1,11 +1,6 @@
 const byId = (id) => document.getElementById(id);
 
-const quizState = {
-  questions: [],
-  categories: {},
-  answers: [],
-  index: 0,
-};
+const quizState = { questions: [], categories: {}, answers: [], index: 0 };
 
 function scrollToSection(id) {
   document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -62,9 +57,8 @@ function renderQuestion() {
   byId('questionText').textContent = question.question;
   byId('progressBar').style.width = `${((quizState.index + 1) / quizState.questions.length) * 100}%`;
 
-  const answerList = byId('answerList');
-  answerList.innerHTML = '';
-
+  const list = byId('answerList');
+  list.innerHTML = '';
   question.options.forEach((label, optionIndex) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -74,7 +68,7 @@ function renderQuestion() {
       quizState.answers[quizState.index] = optionIndex;
       renderQuestion();
     });
-    answerList.appendChild(button);
+    list.appendChild(button);
   });
 
   byId('previousButton').style.visibility = quizState.index === 0 ? 'hidden' : 'visible';
@@ -89,7 +83,6 @@ async function showResults() {
     body: JSON.stringify({ answers: quizState.answers }),
   });
   const data = await response.json();
-
   if (!response.ok) {
     window.alert(data.error || 'Errore durante il calcolo.');
     return;
@@ -108,10 +101,7 @@ async function showResults() {
     .join('');
   byId('challengeTitle').textContent = data.challenge.title;
   byId('challengeText').textContent = data.challenge.text;
-  byId('tipsList').innerHTML = data.tips
-    .map((tip) => `<div class="tip-item"><span>${tip.category}</span><p>${tip.text}</p></div>`)
-    .join('');
-
+  byId('tipsList').innerHTML = data.tips.map((tip) => `<div class="tip-item"><span>${tip.category}</span><p>${tip.text}</p></div>`).join('');
   const wins = data.wins.length ? data.wins : [{ text: 'Hai completato il check: conoscere il punto di partenza è già utile.' }];
   byId('winsList').innerHTML = wins.map((win) => `<div class="win-item">${win.text}</div>`).join('');
   scrollToSection('quiz');
@@ -137,9 +127,7 @@ byId('nextButton').addEventListener('click', () => {
   if (quizState.index < quizState.questions.length - 1) {
     quizState.index += 1;
     renderQuestion();
-  } else {
-    showResults();
-  }
+  } else showResults();
 });
 
 byId('menuToggle').addEventListener('click', () => {
@@ -147,426 +135,485 @@ byId('menuToggle').addEventListener('click', () => {
   const isOpen = menu.classList.toggle('open');
   byId('menuToggle').setAttribute('aria-expanded', String(isOpen));
 });
+document.querySelectorAll('#mobileNav a').forEach((link) => link.addEventListener('click', () => {
+  byId('mobileNav').classList.remove('open');
+  byId('menuToggle').setAttribute('aria-expanded', 'false');
+}));
 
-document.querySelectorAll('#mobileNav a').forEach((link) => {
-  link.addEventListener('click', () => {
-    byId('mobileNav').classList.remove('open');
-    byId('menuToggle').setAttribute('aria-expanded', 'false');
-  });
-});
-
+// Eco Maze -----------------------------------------------------------------
 const canvas = byId('gameCanvas');
 const ctx = canvas.getContext('2d');
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
-const BEST_KEY = 'ecoscore_river_cleanup_best';
+const tile = 32;
+const maze = [
+  '#####################',
+  '#.........#.........#',
+  '#.###.###.#.###.###.#',
+  '#O###.###.#.###.###O#',
+  '#...................#',
+  '#.###.#.#####.#.###.#',
+  '#.....#...#...#.....#',
+  '#####.### # ###.#####',
+  '#.....#.......#.....#',
+  '#.###.#.#####.#.###.#',
+  '#...#.....#.....#...#',
+  '###.#.###.#.###.#.###',
+  '#O....#.......#....O#',
+  '#.########.########.#',
+  '#####################',
+];
+const dirs = [
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+];
+const bestKey = 'ecoscore_maze_best';
+let phase = 'ready';
+let desired = { x: 0, y: 0 };
+let score = 0;
+let level = 1;
+let lives = 3;
+let best = Number(localStorage.getItem(bestKey) || 0);
+let power = 0;
+let invulnerable = 0;
+let seeds = new Set();
+let flowers = new Set();
+let particles = [];
+let audioContext = null;
+let musicTimer = null;
+let musicStep = 0;
+let muted = false;
+let lastTime = performance.now();
 
-const game = {
-  running: false,
-  lastTime: 0,
-  elapsed: 0,
-  score: 0,
-  combo: 1,
-  comboTimer: 0,
-  best: Number(localStorage.getItem(BEST_KEY) || 0),
-  spawnTimer: 0,
-  obstacleTimer: 0,
-  targetX: WIDTH / 2,
-  pointerActive: false,
-  keys: { left: false, right: false },
-  particles: [],
-  floaters: [],
-  obstacles: [],
-  popups: [],
-};
-
-const boat = {
-  x: WIDTH / 2,
-  y: HEIGHT - 115,
-  width: 72,
-  height: 92,
-  vx: 0,
-  tilt: 0,
-};
-
-function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
-function randomBetween(min, max) { return min + Math.random() * (max - min); }
-
-function roundedRect(x, y, width, height, radius, color) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.roundRect(x, y, width, height, radius);
-  ctx.fill();
+function mover(x, y, speed) {
+  return { gx: x, gy: y, tx: x, ty: y, progress: 0, dir: { x: 0, y: 0 }, speed };
 }
 
-function drawRiver(time) {
-  const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  gradient.addColorStop(0, '#8cc4c8');
-  gradient.addColorStop(1, '#5f9da7');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+let player = mover(10, 12, 5.3);
+let enemies = [];
 
-  ctx.fillStyle = '#6e8a5f';
-  ctx.fillRect(0, 0, 82, HEIGHT);
-  ctx.fillRect(WIDTH - 82, 0, 82, HEIGHT);
-  ctx.fillStyle = '#8ca27c';
-  ctx.fillRect(67, 0, 18, HEIGHT);
-  ctx.fillRect(WIDTH - 85, 0, 18, HEIGHT);
+function cellKey(x, y) { return `${x},${y}`; }
+function openCell(x, y) { return y >= 0 && y < maze.length && x >= 0 && x < maze[0].length && maze[y][x] !== '#'; }
+function position(entity) {
+  return {
+    x: entity.gx + (entity.tx - entity.gx) * entity.progress,
+    y: entity.gy + (entity.ty - entity.gy) * entity.progress,
+  };
+}
 
-  for (let i = 0; i < 18; i += 1) {
-    const y = (i * 54 + (time * 70) % 54) - 54;
-    const offset = Math.sin(time * 1.7 + i * .8) * 20;
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(120 + offset, y);
-    ctx.bezierCurveTo(260 + offset, y + 14, 390 - offset, y - 10, 520 + offset, y + 5);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(560 - offset, y + 20);
-    ctx.bezierCurveTo(660 + offset, y + 5, 760 - offset, y + 24, 835 + offset, y + 10);
-    ctx.stroke();
+function createEnemies() {
+  const boost = Math.min(1.6, (level - 1) * 0.14);
+  return [
+    { ...mover(9, 7, 3.35 + boost), mode: 'chase', hx: 9, hy: 7 },
+    { ...mover(11, 7, 3.15 + boost), mode: 'ambush', hx: 11, hy: 7 },
+    { ...mover(10, 8, 2.95 + boost), mode: 'wander', hx: 10, hy: 8 },
+  ];
+}
+
+function resetPositions() {
+  player = mover(10, 12, 5.3);
+  desired = { x: 0, y: 0 };
+  enemies = createEnemies();
+}
+
+function resetLevel() {
+  seeds = new Set();
+  flowers = new Set();
+  maze.forEach((row, y) => row.split('').forEach((value, x) => {
+    if (value === '.') seeds.add(cellKey(x, y));
+    if (value === 'O') flowers.add(cellKey(x, y));
+  }));
+  power = 0;
+  invulnerable = 1.2;
+  particles = [];
+  resetPositions();
+}
+
+function ensureAudio() {
+  if (!audioContext) audioContext = new AudioContext();
+  if (audioContext.state === 'suspended') audioContext.resume();
+  return audioContext;
+}
+
+function tone(freq, duration, volume, type = 'sine', delay = 0) {
+  if (muted) return;
+  const audio = ensureAudio();
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  const start = audio.currentTime + delay;
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(gain).connect(audio.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.03);
+}
+
+function sfx(name) {
+  if (name === 'seed') tone(720, .07, .035, 'triangle');
+  if (name === 'flower') {
+    tone(440, .12, .05, 'sine');
+    tone(660, .14, .04, 'sine', .08);
+    tone(880, .18, .035, 'sine', .16);
   }
-}
-
-function drawBoat(time) {
-  const bob = Math.sin(time * 5) * 2.3;
-  ctx.save();
-  ctx.translate(boat.x, boat.y + bob);
-  ctx.rotate(boat.tilt);
-
-  ctx.fillStyle = 'rgba(255,255,255,0.22)';
-  ctx.beginPath();
-  ctx.moveTo(-25, 38);
-  ctx.lineTo(-42, 82);
-  ctx.lineTo(-11, 51);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(25, 38);
-  ctx.lineTo(42, 82);
-  ctx.lineTo(11, 51);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = '#2b5f45';
-  ctx.beginPath();
-  ctx.moveTo(0, -46);
-  ctx.quadraticCurveTo(38, -30, 32, 28);
-  ctx.quadraticCurveTo(24, 48, 0, 50);
-  ctx.quadraticCurveTo(-24, 48, -32, 28);
-  ctx.quadraticCurveTo(-38, -30, 0, -46);
-  ctx.fill();
-
-  ctx.fillStyle = '#f0ede1';
-  ctx.beginPath();
-  ctx.moveTo(0, -30);
-  ctx.quadraticCurveTo(25, -15, 21, 25);
-  ctx.quadraticCurveTo(0, 36, -21, 25);
-  ctx.quadraticCurveTo(-25, -15, 0, -30);
-  ctx.fill();
-
-  roundedRect(-13, -3, 26, 24, 6, '#b66b3d');
-  ctx.fillStyle = '#23352b';
-  ctx.beginPath();
-  ctx.arc(0, -9, 10, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#d7e1d8';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(-22, 9);
-  ctx.lineTo(-44, 36);
-  ctx.moveTo(22, 9);
-  ctx.lineTo(44, 36);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function spawnTrash() {
-  const types = ['bottle', 'can', 'bag'];
-  game.floaters.push({
-    type: types[Math.floor(Math.random() * types.length)],
-    x: randomBetween(125, WIDTH - 125),
-    y: -40,
-    rotation: randomBetween(-.8, .8),
-    spin: randomBetween(-1.4, 1.4),
-    drift: randomBetween(-22, 22),
-  });
-}
-
-function spawnObstacle() {
-  const type = Math.random() < .52 ? 'rock' : 'log';
-  game.obstacles.push({
-    type,
-    x: randomBetween(130, WIDTH - 130),
-    y: -80,
-    width: type === 'rock' ? randomBetween(48, 68) : randomBetween(80, 112),
-    height: type === 'rock' ? randomBetween(42, 58) : randomBetween(26, 34),
-    rotation: randomBetween(-.4, .4),
-  });
-}
-
-function drawTrash(item) {
-  ctx.save();
-  ctx.translate(item.x, item.y);
-  ctx.rotate(item.rotation);
-  if (item.type === 'bottle') {
-    roundedRect(-7, -14, 14, 28, 5, '#dbe9e7');
-    roundedRect(-4, -20, 8, 8, 2, '#39765b');
-    ctx.fillStyle = '#89b8a7';
-    ctx.fillRect(-5, -5, 10, 8);
-  } else if (item.type === 'can') {
-    roundedRect(-9, -13, 18, 26, 4, '#d4d8d2');
-    ctx.fillStyle = '#b05243';
-    ctx.fillRect(-8, -5, 16, 8);
-  } else {
-    ctx.fillStyle = '#d8d0ad';
-    ctx.beginPath();
-    ctx.moveTo(-14, -10);
-    ctx.lineTo(12, -13);
-    ctx.lineTo(15, 13);
-    ctx.lineTo(-10, 10);
-    ctx.closePath();
-    ctx.fill();
+  if (name === 'hit') {
+    tone(170, .22, .08, 'sawtooth');
+    tone(110, .32, .05, 'square', .08);
   }
-  ctx.restore();
-}
-
-function drawObstacle(item) {
-  ctx.save();
-  ctx.translate(item.x, item.y);
-  ctx.rotate(item.rotation);
-  if (item.type === 'rock') {
-    ctx.fillStyle = '#59645f';
-    ctx.beginPath();
-    ctx.moveTo(-item.width * .48, item.height * .25);
-    ctx.lineTo(-item.width * .26, -item.height * .45);
-    ctx.lineTo(item.width * .2, -item.height * .5);
-    ctx.lineTo(item.width * .5, item.height * .18);
-    ctx.lineTo(item.width * .24, item.height * .46);
-    ctx.closePath();
-    ctx.fill();
-  } else {
-    roundedRect(-item.width / 2, -item.height / 2, item.width, item.height, item.height / 2, '#6b4a32');
-    ctx.fillStyle = '#8c6549';
-    ctx.beginPath();
-    ctx.arc(-item.width / 2 + 10, 0, item.height * .28, 0, Math.PI * 2);
-    ctx.fill();
+  if (name === 'enemy') {
+    tone(250, .09, .05, 'square');
+    tone(390, .12, .04, 'triangle', .06);
   }
-  ctx.restore();
+  if (name === 'level') [523, 659, 784, 1047].forEach((n, i) => tone(n, .16, .04, 'sine', i * .09));
 }
 
-function spawnParticles(x, y, color, amount) {
-  for (let i = 0; i < amount; i += 1) {
-    game.particles.push({
-      x,
-      y,
-      vx: randomBetween(-85, 85),
-      vy: randomBetween(-70, 20),
-      life: randomBetween(.35, .75),
-      maxLife: .75,
-      size: randomBetween(3, 7),
-      color,
-    });
-  }
-}
-
-function addPopup(text, x, y) { game.popups.push({ text, x, y, life: .8 }); }
-function boatHitbox() { return { x: boat.x - 23, y: boat.y - 37, width: 46, height: 72 }; }
-function trashHitbox(item) { return { x: item.x - 15, y: item.y - 18, width: 30, height: 36 }; }
-function obstacleHitbox(item) { return { x: item.x - item.width * .42, y: item.y - item.height * .38, width: item.width * .84, height: item.height * .76 }; }
-function intersects(a, b) { return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y; }
-
-function resetGame() {
-  game.elapsed = 0;
-  game.score = 0;
-  game.combo = 1;
-  game.comboTimer = 0;
-  game.spawnTimer = .4;
-  game.obstacleTimer = 1.8;
-  game.floaters = [];
-  game.obstacles = [];
-  game.particles = [];
-  game.popups = [];
-  game.targetX = WIDTH / 2;
-  boat.x = WIDTH / 2;
-  boat.vx = 0;
-  boat.tilt = 0;
-  updateHud();
+function startMusic() {
+  ensureAudio();
+  if (musicTimer) return;
+  const melody = [262, 330, 392, 330, 294, 349, 440, 349];
+  musicTimer = window.setInterval(() => {
+    if (phase !== 'running' || muted) return;
+    const i = musicStep++ % melody.length;
+    tone(melody[i], .17, .012, 'triangle');
+    if (i % 2 === 0) tone(i % 4 === 0 ? 131 : 147, .2, .009, 'sine');
+  }, 260);
 }
 
 function updateHud() {
-  byId('gameScore').textContent = Math.floor(game.score);
-  byId('gameCombo').textContent = `x${game.combo}`;
-  byId('gameBest').textContent = game.best;
+  byId('gameScore').textContent = score;
+  byId('gameLevel').textContent = level;
+  byId('gameLives').textContent = '●'.repeat(Math.max(0, lives));
+  byId('gameBest').textContent = best;
 }
 
-function startGame() {
-  resetGame();
-  game.running = true;
-  game.lastTime = performance.now();
-  byId('gameOverlay').classList.add('hidden');
-  byId('gameStatus').textContent = 'In corso';
-  requestAnimationFrame(gameLoop);
-}
-
-function endGame() {
-  game.running = false;
-  const finalScore = Math.floor(game.score);
-  if (finalScore > game.best) {
-    game.best = finalScore;
-    localStorage.setItem(BEST_KEY, String(game.best));
+function addScore(amount) {
+  score += amount;
+  if (score > best) {
+    best = score;
+    localStorage.setItem(bestKey, String(best));
   }
   updateHud();
-  byId('overlayTitle').textContent = 'Partita finita';
-  byId('overlayText').textContent = `Punteggio ${finalScore} · record ${game.best}`;
-  byId('gameOverlay').classList.remove('hidden');
-  byId('gameStatus').textContent = 'Game over';
 }
 
-function updateGame(delta) {
-  game.elapsed += delta;
-  const speed = Math.min(330, 150 + game.elapsed * 4.8);
-  const keyboardDirection = Number(game.keys.right) - Number(game.keys.left);
-  if (keyboardDirection) game.targetX += keyboardDirection * 430 * delta;
-  game.targetX = clamp(game.targetX, 118, WIDTH - 118);
-
-  const distance = game.targetX - boat.x;
-  boat.vx += distance * 8.5 * delta;
-  boat.vx *= Math.pow(.0008, delta);
-  boat.x += boat.vx * delta;
-  boat.x = clamp(boat.x, 118, WIDTH - 118);
-  boat.tilt += (clamp(boat.vx / 650, -.24, .24) - boat.tilt) * Math.min(1, delta * 8);
-
-  game.spawnTimer -= delta;
-  if (game.spawnTimer <= 0) {
-    spawnTrash();
-    game.spawnTimer = randomBetween(.48, .9) * Math.max(.62, 1 - game.elapsed / 180);
+function burst(gx, gy, color, count) {
+  for (let i = 0; i < count; i += 1) {
+    particles.push({ x: (gx + .5) * tile, y: (gy + .5) * tile, vx: (Math.random() - .5) * 90, vy: (Math.random() - .5) * 90, life: 1, color });
   }
-  game.obstacleTimer -= delta;
-  if (game.obstacleTimer <= 0) {
-    spawnObstacle();
-    game.obstacleTimer = randomBetween(1.15, 1.8) * Math.max(.68, 1 - game.elapsed / 210);
+}
+
+function collect(gx, gy) {
+  const id = cellKey(gx, gy);
+  if (seeds.delete(id)) {
+    addScore(10);
+    burst(gx, gy, '#f2c45e', 5);
+    sfx('seed');
   }
-  game.comboTimer -= delta;
-  if (game.comboTimer <= 0 && game.combo > 1) game.combo = 1;
+  if (flowers.delete(id)) {
+    addScore(50);
+    power = 7;
+    burst(gx, gy, '#b6db76', 18);
+    sfx('flower');
+  }
+  if (!seeds.size && !flowers.size) {
+    addScore(500);
+    sfx('level');
+    level += 1;
+    updateHud();
+    resetLevel();
+  }
+}
 
-  const currentBoatHitbox = boatHitbox();
-  game.floaters.forEach((item) => {
-    item.y += speed * delta;
-    item.x += Math.sin(game.elapsed * 2 + item.y * .015) * item.drift * delta;
-    item.rotation += item.spin * delta;
-  });
-  game.obstacles.forEach((item) => {
-    item.y += speed * .9 * delta;
-    item.rotation += .08 * delta;
-  });
+function playerDirection() {
+  if (openCell(player.gx + desired.x, player.gy + desired.y)) return desired;
+  if (openCell(player.gx + player.dir.x, player.gy + player.dir.y)) return player.dir;
+  return { x: 0, y: 0 };
+}
 
-  game.floaters = game.floaters.filter((item) => {
-    if (intersects(currentBoatHitbox, trashHitbox(item))) {
-      const gained = 10 * game.combo;
-      game.score += gained;
-      game.combo = Math.min(5, game.combo + 1);
-      game.comboTimer = 2.25;
-      spawnParticles(item.x, item.y, '#e5f1ea', 12);
-      addPopup(`+${gained}`, item.x, item.y);
-      return false;
+function enemyDirection(enemy) {
+  const available = dirs.filter((dir) => openCell(enemy.gx + dir.x, enemy.gy + dir.y));
+  if (!available.length) return { x: 0, y: 0 };
+  const reverse = { x: -enemy.dir.x, y: -enemy.dir.y };
+  const choices = available.length > 1 ? available.filter((dir) => dir.x !== reverse.x || dir.y !== reverse.y) : available;
+  const target = position(player);
+  if (power > 0) {
+    return choices.sort((a, b) => {
+      const da = Math.abs(enemy.gx + a.x - target.x) + Math.abs(enemy.gy + a.y - target.y);
+      const db = Math.abs(enemy.gx + b.x - target.x) + Math.abs(enemy.gy + b.y - target.y);
+      return db - da;
+    })[0];
+  }
+  if (enemy.mode === 'wander' || Math.random() < .18) return choices[Math.floor(Math.random() * choices.length)];
+  const aim = enemy.mode === 'ambush' ? { x: target.x + desired.x * 3, y: target.y + desired.y * 3 } : target;
+  return choices.sort((a, b) => {
+    const da = Math.abs(enemy.gx + a.x - aim.x) + Math.abs(enemy.gy + a.y - aim.y);
+    const db = Math.abs(enemy.gx + b.x - aim.x) + Math.abs(enemy.gy + b.y - aim.y);
+    return da - db;
+  })[0];
+}
+
+function advance(entity, dt, chooser, arrived) {
+  let distance = entity.speed * dt;
+  while (distance > 0) {
+    if (entity.tx === entity.gx && entity.ty === entity.gy) {
+      const next = chooser();
+      if (!next.x && !next.y) return;
+      entity.dir = { ...next };
+      entity.tx = entity.gx + next.x;
+      entity.ty = entity.gy + next.y;
     }
-    return item.y < HEIGHT + 70;
-  });
-
-  for (const item of game.obstacles) {
-    if (intersects(currentBoatHitbox, obstacleHitbox(item))) {
-      spawnParticles(boat.x, boat.y, '#ffffff', 18);
-      endGame();
-      return;
+    const step = Math.min(distance, 1 - entity.progress);
+    entity.progress += step;
+    distance -= step;
+    if (entity.progress >= .9999) {
+      entity.gx = entity.tx;
+      entity.gy = entity.ty;
+      entity.tx = entity.gx;
+      entity.ty = entity.gy;
+      entity.progress = 0;
+      if (arrived) arrived();
     }
   }
-  game.obstacles = game.obstacles.filter((item) => item.y < HEIGHT + 100);
+}
 
-  game.particles.forEach((particle) => {
-    particle.life -= delta;
-    particle.x += particle.vx * delta;
-    particle.y += particle.vy * delta;
-    particle.vy += 110 * delta;
-  });
-  game.particles = game.particles.filter((particle) => particle.life > 0);
-  game.popups.forEach((popup) => { popup.life -= delta; popup.y -= 36 * delta; });
-  game.popups = game.popups.filter((popup) => popup.life > 0);
-  game.score += delta * 2.2;
+function setPhase(next) {
+  phase = next;
+  const overlay = byId('gameOverlay');
+  if (next === 'running') overlay.classList.add('hidden');
+  else overlay.classList.remove('hidden');
+  if (next === 'paused') {
+    byId('overlayTitle').textContent = 'In pausa';
+    byId('overlayText').textContent = 'Premi per riprendere.';
+  } else if (next === 'gameover') {
+    byId('overlayTitle').textContent = 'Partita finita';
+    byId('overlayText').textContent = `Punteggio: ${score}`;
+  } else {
+    byId('overlayTitle').textContent = 'Eco Maze';
+    byId('overlayText').textContent = 'Raccogli tutti i semi e evita lo smog.';
+  }
+}
+
+function newGame() {
+  score = 0;
+  level = 1;
+  lives = 3;
+  resetLevel();
   updateHud();
+  setPhase('running');
+  startMusic();
+  tone(392, .1, .04, 'triangle');
+  tone(523, .13, .04, 'triangle', .09);
 }
 
-function drawEffects() {
-  game.particles.forEach((particle) => {
-    ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
+function togglePause() {
+  if (phase === 'running') setPhase('paused');
+  else if (phase === 'paused') setPhase('running');
+  byId('pauseGameButton').textContent = phase === 'paused' ? 'Riprendi' : 'Pausa';
+}
+
+function toggleSound() {
+  muted = !muted;
+  byId('soundButton').textContent = muted ? 'Audio off' : 'Audio on';
+  if (!muted) {
+    ensureAudio();
+    tone(523, .08, .03, 'triangle');
+  }
+}
+
+function loseLife() {
+  if (invulnerable > 0) return;
+  lives -= 1;
+  updateHud();
+  sfx('hit');
+  if (lives <= 0) {
+    setPhase('gameover');
+    return;
+  }
+  invulnerable = 1.6;
+  resetPositions();
+}
+
+function queueDirection(dir) {
+  desired = { ...dir };
+  if (phase === 'ready') newGame();
+}
+
+function drawLeaf(x, y, rotation, scale = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#7fbd67';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 7, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function renderGame(now) {
+  const dt = Math.min(.033, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (phase === 'running') {
+    power = Math.max(0, power - dt);
+    invulnerable = Math.max(0, invulnerable - dt);
+    advance(player, dt, playerDirection, () => collect(player.gx, player.gy));
+    enemies.forEach((enemy) => advance(enemy, dt, () => enemyDirection(enemy)));
+    const p = position(player);
+    enemies.forEach((enemy) => {
+      const e = position(enemy);
+      if (Math.hypot(p.x - e.x, p.y - e.y) < .62) {
+        if (power > 0) {
+          addScore(200);
+          sfx('enemy');
+          burst(enemy.gx, enemy.gy, '#b7d9dd', 20);
+          Object.assign(enemy, mover(enemy.hx, enemy.hy, enemy.speed));
+        } else loseLife();
+      }
+    });
+    particles.forEach((particle) => {
+      particle.x += particle.vx * dt;
+      particle.y += particle.vy * dt;
+      particle.vy += 18 * dt;
+      particle.life -= dt * 1.8;
+    });
+    particles = particles.filter((particle) => particle.life > 0);
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#eef3e8';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let y = 0; y < maze.length; y += 1) {
+    for (let x = 0; x < maze[y].length; x += 1) {
+      const px = x * tile;
+      const py = y * tile;
+      if (maze[y][x] === '#') {
+        ctx.fillStyle = '#244d3b';
+        ctx.beginPath();
+        ctx.roundRect(px + 2, py + 2, tile - 4, tile - 4, 7);
+        ctx.fill();
+        if ((x + y) % 3 === 0) drawLeaf(px + 9, py + 9, -.55, .72);
+      } else {
+        ctx.fillStyle = (x + y) % 2 ? '#f0f4eb' : '#f4f6ef';
+        ctx.fillRect(px, py, tile, tile);
+      }
+    }
+  }
+
+  seeds.forEach((value) => {
+    const [x, y] = value.split(',').map(Number);
+    const pulse = 1 + Math.sin(now / 220 + x + y) * .15;
+    ctx.fillStyle = '#d8a93b';
+    ctx.beginPath();
+    ctx.ellipse((x + .5) * tile, (y + .5) * tile, 3.1 * pulse, 4.3 * pulse, .5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  flowers.forEach((value) => {
+    const [x, y] = value.split(',').map(Number);
+    const cx = (x + .5) * tile;
+    const cy = (y + .5) * tile;
+    for (let petal = 0; petal < 5; petal += 1) {
+      const angle = petal * Math.PI * 2 / 5 + now / 4000;
+      ctx.fillStyle = '#f1d56f';
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(angle) * 6, cy + Math.sin(angle) * 6, 3.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#5d9d59';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  enemies.forEach((enemy, index) => {
+    const e = position(enemy);
+    const cx = (e.x + .5) * tile;
+    const cy = (e.y + .5) * tile + Math.sin(now / 180 + index) * 1.6;
+    ctx.fillStyle = power > 0 ? '#9bcbd1' : ['#66716d', '#596560', '#727a70'][index];
+    ctx.beginPath();
+    ctx.arc(cx, cy - 2, 11, Math.PI, 0);
+    ctx.lineTo(cx + 12, cy + 9);
+    ctx.quadraticCurveTo(cx + 7, cy + 5, cx + 3, cy + 10);
+    ctx.quadraticCurveTo(cx - 2, cy + 5, cx - 6, cy + 10);
+    ctx.quadraticCurveTo(cx - 10, cy + 5, cx - 12, cy + 9);
+    ctx.closePath();
+    ctx.fill();
+  });
+
+  const pp = position(player);
+  const pcx = (pp.x + .5) * tile;
+  const pcy = (pp.y + .5) * tile;
+  const blink = invulnerable > 0 && Math.floor(now / 90) % 2 === 0;
+  if (!blink) {
+    ctx.fillStyle = power > 0 ? '#66b76c' : '#3b8b5f';
+    ctx.beginPath();
+    ctx.arc(pcx, pcy, 11, 0, Math.PI * 2);
+    ctx.fill();
+    drawLeaf(pcx - 1, pcy - 12, -.7 + Math.sin(now / 130) * .12, .95);
+    drawLeaf(pcx + 5, pcy - 12, .7 - Math.sin(now / 130) * .12, .9);
+  }
+
+  particles.forEach((particle) => {
+    ctx.globalAlpha = Math.max(0, particle.life);
     ctx.fillStyle = particle.color;
     ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+    ctx.arc(particle.x, particle.y, 3.2, 0, Math.PI * 2);
     ctx.fill();
   });
   ctx.globalAlpha = 1;
-  ctx.textAlign = 'center';
-  ctx.font = '700 22px Inter, sans-serif';
-  game.popups.forEach((popup) => {
-    ctx.globalAlpha = clamp(popup.life / .8, 0, 1);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(popup.text, popup.x, popup.y);
+
+  if (power > 0) {
+    ctx.fillStyle = 'rgba(36,77,59,.18)';
+    ctx.fillRect(0, canvas.height - 5, canvas.width * Math.min(1, power / 7), 5);
+  }
+  requestAnimationFrame(renderGame);
+}
+
+byId('gameOverlay').addEventListener('click', () => {
+  if (phase === 'paused') togglePause();
+  else newGame();
+});
+byId('restartGameButton').addEventListener('click', newGame);
+byId('pauseGameButton').addEventListener('click', togglePause);
+byId('soundButton').addEventListener('click', toggleSound);
+byId('fullscreenButton').addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else if (document.fullscreenEnabled) await byId('mazeFrame').requestFullscreen();
+  } catch (error) {
+    console.warn('Fullscreen non disponibile', error);
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  byId('fullscreenButton').textContent = document.fullscreenElement ? 'Esci da schermo intero' : 'Schermo intero';
+});
+
+document.querySelectorAll('[data-dir]').forEach((button) => {
+  button.addEventListener('pointerdown', () => {
+    const map = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } };
+    queueDirection(map[button.dataset.dir]);
   });
-  ctx.globalAlpha = 1;
-}
-
-function drawGame() {
-  drawRiver(game.elapsed);
-  game.floaters.forEach(drawTrash);
-  game.obstacles.forEach(drawObstacle);
-  drawBoat(game.elapsed);
-  drawEffects();
-}
-
-function gameLoop(now) {
-  if (!game.running) return;
-  const delta = Math.min(.033, (now - game.lastTime) / 1000);
-  game.lastTime = now;
-  updateGame(delta);
-  drawGame();
-  if (game.running) requestAnimationFrame(gameLoop);
-}
-
-function canvasXFromPointer(event) {
-  const rect = canvas.getBoundingClientRect();
-  return ((event.clientX - rect.left) / rect.width) * WIDTH;
-}
-
-canvas.addEventListener('pointerdown', (event) => {
-  game.pointerActive = true;
-  canvas.setPointerCapture(event.pointerId);
-  game.targetX = canvasXFromPointer(event);
 });
-canvas.addEventListener('pointermove', (event) => {
-  if (game.pointerActive && game.running) game.targetX = canvasXFromPointer(event);
-});
-canvas.addEventListener('pointerup', () => { game.pointerActive = false; });
-canvas.addEventListener('pointercancel', () => { game.pointerActive = false; });
 
 window.addEventListener('keydown', (event) => {
-  if (event.code === 'ArrowLeft' || event.code === 'KeyA') game.keys.left = true;
-  if (event.code === 'ArrowRight' || event.code === 'KeyD') game.keys.right = true;
-  if ((event.code === 'ArrowLeft' || event.code === 'ArrowRight') && byId('game').getBoundingClientRect().top < window.innerHeight) event.preventDefault();
-});
-window.addEventListener('keyup', (event) => {
-  if (event.code === 'ArrowLeft' || event.code === 'KeyA') game.keys.left = false;
-  if (event.code === 'ArrowRight' || event.code === 'KeyD') game.keys.right = false;
-});
-
-byId('startGameButton').addEventListener('click', startGame);
-byId('gameOverlay').addEventListener('click', startGame);
-byId('resetBestButton').addEventListener('click', () => {
-  game.best = 0;
-  localStorage.removeItem(BEST_KEY);
-  updateHud();
+  const map = {
+    ArrowLeft: { x: -1, y: 0 }, KeyA: { x: -1, y: 0 },
+    ArrowRight: { x: 1, y: 0 }, KeyD: { x: 1, y: 0 },
+    ArrowUp: { x: 0, y: -1 }, KeyW: { x: 0, y: -1 },
+    ArrowDown: { x: 0, y: 1 }, KeyS: { x: 0, y: 1 },
+  };
+  if (map[event.code]) {
+    if (phase === 'running' || phase === 'ready') event.preventDefault();
+    queueDirection(map[event.code]);
+  }
+  if (event.code === 'KeyP') togglePause();
+  if (event.code === 'KeyM') toggleSound();
 });
 
-resetGame();
-drawGame();
-loadQuiz().catch((error) => console.warn(error));
+resetLevel();
+updateHud();
+requestAnimationFrame(renderGame);
+loadQuiz().catch(() => {});
