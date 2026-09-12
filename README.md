@@ -1,57 +1,50 @@
-# EcoScore 🌱
+# EcoScore
 
-## AstraIndustries Server
+EcoScore is a small sustainability web application by **AstraIndustries**. It turns 20 everyday-habit questions into a score from 0 to 100 and highlights the areas where a few realistic changes can have the most value.
 
-👉 [**Entra nel server Discord AstraIndustries**](https://discord.gg/yv6ZYd7eTw)
+## What it includes
 
-## Apri EcoScore
-
-👉 [**Apri EcoScore nel browser**](https://ecoscore-71mu7k.v2.appdeploy.ai/)
-
-EcoScore is a sustainability web application built with **Python + Flask**.
-
-The user answers 20 questions across four areas — Mobility, Energy, Food and Consumption — and the browser sends only the selected answer indexes to the Flask backend. Python validates the 20 answers, calculates the final score out of 100, computes category results, and returns personalized tips and a 7-day challenge.
+- 20-question sustainability check
+- 4 categories: Mobility, Energy, Food and Consumption
+- score from 0 to 100
+- category percentages
+- personalised improvement priorities
+- positive habits already in place
+- a 7-day challenge based on the weakest category
+- **River Cleanup**, an animated 2D canvas mini-game
 
 ## Tech stack
 
-- **Python 3** — core application logic
-- **Flask** — web server and API endpoints
-- **HTML5** — interface structure
-- **CSS3** — responsive visual design
-- **JavaScript** — dynamic quiz UI and Leaf Runner mini-game
-- **Canvas API + requestAnimationFrame** — 2D pixel game rendering and loop
+- Python 3
+- Flask
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Canvas API + `requestAnimationFrame`
 
-## Where Python is used
+The quiz score is calculated on the Flask backend. The browser sends only the selected answer indexes; the server validates them against `questions.json` before returning the result.
 
-### `app.py`
-Runs the Flask web server and exposes:
+## Project structure
 
-- `GET /` — serves the EcoScore interface
-- `GET /api/questions` — returns the 20 quiz questions
-- `POST /api/score` — receives the answers and returns the calculated result
-
-### `ecoscore.py`
-Contains:
-
-- all 20 questions
-- 5 answers per question
-- score values from 1 to 5
-- validation logic
-- total EcoScore calculation
-- category totals
-- personalized recommendations
-- Green Wins
-- 7-day challenge selection
-
-With 20 questions × maximum 5 points, the maximum score is exactly **100**.
+```text
+EcoScore/
+├── app.py
+├── questions.json
+├── requirements.txt
+├── install.bat
+├── start.bat
+├── templates/
+│   └── index.html
+└── static/
+    ├── app.js
+    └── style.css
+```
 
 ## Run locally
 
 ### Windows
 
-1. Run `install.bat` once.
-2. Run `start.bat`.
-3. The browser opens at `http://127.0.0.1:5000`.
+Run `install.bat` once, then start the project with `start.bat`.
 
 ### Terminal
 
@@ -60,38 +53,43 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open:
+Open:
 
 ```text
 http://127.0.0.1:5000
 ```
 
-## Project structure
+## Quiz logic
 
-```text
-EcoScore/
-├── app.py
-├── ecoscore.py
-├── requirements.txt
-├── install.bat
-├── start.bat
-├── templates/
-│   └── index.html
-└── static/
-    ├── style.css
-    └── app.js
-```
+Each question has five possible answers worth 1 to 5 points. There are five questions in each category, so every category is worth up to 25 points and the full EcoScore is worth 100.
 
-## Leaf Runner
+`POST /api/score` returns:
 
-Leaf Runner is a custom 2D pixel mini-game included in the web interface.
+- total score
+- score band and summary
+- best and weakest category
+- category percentages
+- improvement priorities
+- green wins
+- the selected 7-day challenge
 
-Controls:
+## River Cleanup
 
-- `SPACE` — jump
-- `↑` — jump
-- tap/click — mobile control
+River Cleanup replaces the previous endless runner. It is a top-down canvas mini-game with:
 
----
+- keyboard and pointer/touch controls
+- animated water and boat movement
+- collectible waste
+- rocks and logs as obstacles
+- combo multiplier
+- particles and floating score feedback
+- progressive speed increase
+- local high-score persistence
 
-EcoScore is an educational tool and is not an environmental certification or a complete scientific measurement of personal emissions.
+## Design direction
+
+The interface intentionally avoids overly decorative cards, excessive badges, fake dashboard elements and constant joke copy. The visual system is restrained and responsive, with a small set of reusable spacing, typography, colour and component rules.
+
+## Note
+
+EcoScore is an educational project. It is not an environmental certification and does not attempt to calculate a complete personal carbon footprint.
