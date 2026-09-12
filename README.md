@@ -6,33 +6,81 @@
 - 🇬🇧 [**EcoScore — English**](https://ecoscore-71mu7k.v2.appdeploy.ai/?lang=en)
 - 💬 [**AstraIndustries Discord**](https://discord.gg/yv6ZYd7eTw)
 
-EcoScore is a small sustainability web application by **AstraIndustries**. It turns 20 everyday-habit questions into a score from 0 to 100 and highlights the areas where a few realistic changes can have the most value.
+EcoScore is a small sustainability project by **AstraIndustries**. It compares 20 everyday habits across four areas, returns a score from 0 to 100 and highlights realistic places to improve.
+
+The public website is available in both Italian and English from the links above.
 
 ## What it includes
 
 - 20-question sustainability check
-- 4 categories: Mobility, Energy, Food and Consumption
+- 4 equally weighted categories: Mobility, Energy, Food and Consumption
 - score from 0 to 100
-- category percentages
-- personalised improvement priorities
+- per-category percentages
+- improvement priorities
 - positive habits already in place
-- a 7-day challenge based on the weakest category
-- **Eco Maze**, an animated nature-themed 2D maze game
+- a simple 7-day challenge
+- **Eco Maze**, an original animated 2D pixel-art maze game
+- responsive desktop and mobile layouts
+- dedicated Italian and English UI copy
+- motion and micro-interactions with reduced-motion support
 
-## Tech stack
+## Current design direction
 
-- Python 3
-- Flask
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Canvas API + `requestAnimationFrame`
-- Web Audio API for procedural music and sound effects
-- Fullscreen API for optional full-screen gameplay
+The interface is intentionally restrained rather than template-heavy. The current polish pass focuses on:
 
-The quiz score is calculated on the Flask backend. The browser sends only the selected answer indexes; the server validates them against `questions.json` before returning the result.
+- consistent spacing and typography
+- natural copy instead of generic dashboard language
+- clear hierarchy and quieter component styling
+- polished hover, press, quiz and result transitions
+- animated score bars and result states
+- a real mobile navigation menu
+- consistent Italian/English labels and fallbacks
+- accessible focus states
+- `prefers-reduced-motion` support
 
-## Project structure
+The main site keeps a clean modern visual language, while Eco Maze deliberately uses a separate 16-bit / pixel-art game aesthetic.
+
+## Eco Maze
+
+Eco Maze is an original nature-themed maze-chase mini-game. It takes inspiration from the general maze-game genre without reusing another game's characters, map or artwork.
+
+Gameplay features:
+
+- true pixel-art canvas rendering with `image-rendering: pixelated`
+- frame-based player and enemy animation
+- animated seeds, flowers, vegetation and ambient fireflies
+- collect seeds to clear each level
+- special flowers temporarily make smog enemies vulnerable
+- three enemy behaviours: chase, ambush and wander
+- lives, score, levels and persistent local high score
+- pixel particles, score popups and screen shake
+- increasing enemy speed on later levels
+- Arrow keys / WASD controls
+- touch directional pad on mobile
+- pause and restart controls
+- mute/unmute control
+- procedural 8-bit-style music and sound effects generated through the Web Audio API
+- optional full-screen mode through the browser Fullscreen API
+
+No external music or sound files are required.
+
+## Quiz logic
+
+Each question has five possible answers worth 1 to 5 points. There are five questions in each category, so every category is worth up to 25 points and the full EcoScore is worth 100.
+
+The result includes:
+
+- total score
+- score band and explanation
+- strongest and weakest category
+- category percentages
+- improvement priorities
+- positive habits
+- one practical 7-day focus
+
+## Repository structure
+
+The repository also contains the Flask reference implementation:
 
 ```text
 EcoScore/
@@ -48,63 +96,34 @@ EcoScore/
     └── style.css
 ```
 
-## Run locally
+### Run the Flask reference build locally
 
-### Windows
+On Windows, run `install.bat` once and then `start.bat`.
 
-Run `install.bat` once, then start the project with `start.bat`.
-
-### Terminal
+Or from a terminal:
 
 ```bash
 pip install -r requirements.txt
 python app.py
 ```
 
-Open:
+Then open:
 
 ```text
 http://127.0.0.1:5000
 ```
 
-## Quiz logic
+## Technology
 
-Each question has five possible answers worth 1 to 5 points. There are five questions in each category, so every category is worth up to 25 points and the full EcoScore is worth 100.
+The project currently uses a mix of:
 
-`POST /api/score` returns:
-
-- total score
-- score band and summary
-- best and weakest category
-- category percentages
-- improvement priorities
-- green wins
-- the selected 7-day challenge
-
-## Eco Maze
-
-Eco Maze is an original nature-themed maze game inspired by classic maze-chase games without reusing their characters, map or artwork.
-
-Gameplay features:
-
-- collect seeds to clear the maze
-- collect special flowers to temporarily weaken the smog enemies
-- three different enemy behaviours
-- lives, score, levels and persistent local high score
-- animated player, enemies, collectibles and particle effects
-- increasing difficulty on later levels
-- keyboard controls with Arrow keys or WASD
-- touch directional controls on mobile devices
-- pause and restart controls
-- mute/unmute control
-- procedural sound effects and looping background music generated with the Web Audio API
-- optional full-screen mode using the browser Fullscreen API
-
-No external audio files are required: music and sound effects are generated directly in the browser.
-
-## Design direction
-
-The interface intentionally avoids overly decorative cards, excessive badges, fake dashboard elements and constant joke copy. The visual system is restrained and responsive, with a small set of reusable spacing, typography, colour and component rules.
+- Python / Flask for the repository reference build and scoring API
+- React + TypeScript for the deployed polished interface
+- HTML5 / CSS3
+- Canvas API + `requestAnimationFrame`
+- Web Audio API
+- Fullscreen API
+- localStorage for the Eco Maze high score
 
 ## Note
 
